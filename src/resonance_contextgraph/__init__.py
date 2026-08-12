@@ -1,6 +1,6 @@
 """Resonance ContextGraph public runtime surface."""
 
-from .compiler import ContextCompiler, ContextRequest, CompiledContext
+from .compiler import CompiledContext, ContextCompiler, ContextRequest
 from .estimator import CellEvidence, EstimatorSpec, score_cell
 from .models import EvidenceClaim, EvidenceEvent, MissionSpec, ObserverReport
 from .reconcile import EventReconciler
