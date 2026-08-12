@@ -11,9 +11,15 @@ from .models import EvidenceClaim, EvidenceEvent, ObserverReport
 class EventReconciler:
     """Collapse multiple observer bundles for one source event into one event.
 
-    The highest-confidence complete report is the canonical event interpretation.
-    Other complete reports remain attached for provenance and disagreement analysis;
-    they are never counted as additional independent trials.
+    Claims are processed in append order. Within one ``(event, observer)`` report,
+    the last admissible claim for each predicate is authoritative. This preserves the
+    frozen CG-5/CG-11 semantics for repeated same-observer deliveries while allowing
+    low-confidence rows to be filtered before they can replace admissible evidence.
+
+    Across complete observer reports for the same event, the highest-confidence report
+    is the canonical event interpretation. Other complete reports remain attached for
+    provenance and disagreement analysis; they are never counted as additional
+    independent trials.
     """
 
     REQUIRED_PREDICATES = frozenset({"participant", "skill", "outcome"})
@@ -40,13 +46,7 @@ class EventReconciler:
         for (event_id, observer), rows in observer_groups.items():
             values: dict[str, EvidenceClaim] = {}
             for claim in rows:
-                prior = values.get(claim.predicate)
-                if prior is None or (claim.confidence, claim.observed_at, claim.claim_id) > (
-                    prior.confidence,
-                    prior.observed_at,
-                    prior.claim_id,
-                ):
-                    values[claim.predicate] = claim
+                values[claim.predicate] = claim
             if not self.REQUIRED_PREDICATES.issubset(values):
                 continue
             outcome = values["outcome"].object
