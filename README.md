@@ -34,15 +34,18 @@ The package has **no dependency on Resonance World**. World integration belongs 
 
 ## Validated defaults
 
-The default stopping policy reproduces the CG-11 confirmatory design:
+The runtime defaults reproduce the **executed frozen CG-11 evaluator**:
 
 - balanced round-robin evidence acquisition;
 - checkpoints at `48, 60, 72, 96, 120, 144, 168` supplemental events;
-- earliest stop at 60 when the selected-pair vector exactly matches the immediately preceding checkpoint;
+- earliest stop at 60 when the selected-pair vector exactly matches the immediately preceding checkpoint **and the checkpoint minimum selected-role score margin is non-negative**;
+- minimum selected-role event-support threshold `0`;
 - hard stop at 168;
 - no evaluator-truth input to acquisition or stopping.
 
-CG-11 confirmed this policy on 30 untouched societies: mean measurement fell from `216.0` to `111.2` probes per Field (`48.5%` reduction) while meeting the frozen non-inferiority criterion. At matched stopped context cost, topology-aware retrieval exceeded bundle-flat by `+4.33 pp` expected mission success and shuffled topology by `+7.23 pp`.
+The score-margin condition is an extraction-time provenance finding. The CG-11 preregistration prose described pair stability alone, but the frozen evaluator computed the selected-role score margin and enforced the candidate threshold `>= 0.0`. Architectural compatibility follows the executed confirmatory implementation and records that discrepancy explicitly rather than rewriting the historical preregistration.
+
+CG-11 passed on 30 untouched societies: mean measurement fell from `216.0` to `111.2` probes per Field (`48.5%` reduction) while meeting the frozen non-inferiority criterion. At matched stopped context cost, topology-aware retrieval exceeded bundle-flat by `+4.33 pp` expected mission success and shuffled topology by `+7.23 pp`.
 
 See [`docs/SCIENTIFIC_PROVENANCE.md`](docs/SCIENTIFIC_PROVENANCE.md) for the complete lineage, including failed experiments that remain failures.
 
