@@ -1,0 +1,80 @@
+name: ContextGraph Release
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "pyproject.toml"
+      - ".github/workflows/release.yml"
+      - "src/**"
+      - "README.md"
+      - "docs/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Resolve package version
+        id: version
+        run: |
+          VERSION="$(python - <<'PY'
+          import tomllib
+          from pathlib import Path
+          data = tomllib.loads(Path('pyproject.toml').read_text())
+          print(data['project']['version'])
+          PY
+          )"
+          case "$VERSION" in
+            *a*|*b*|*rc*|*.dev*)
+              echo "Refusing stable release workflow for prerelease version: $VERSION"
+              exit 1
+              ;;
+          esac
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Test release commit
+        run: |
+          python -m pip install -e '.[dev]'
+          ruff check src tests
+          pytest -q
+      - name: Build distributions
+        run: |
+          python -m pip install build
+          python -m build
+      - name: Create immutable version tag if absent
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "$TAG already exists; verifying release only."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Resonance ContextGraph $TAG"
+            git push origin "$TAG"
+          fi
+      - name: Create GitHub release if absent
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+          else
+            gh release create "$TAG" dist/* \
+              --verify-tag \
+              --generate-notes \
+              --title "Resonance ContextGraph v$VERSION"
+          fi
