@@ -33,7 +33,7 @@ A producer maps an observed assertion to `EvidenceClaim` without exposing hidden
 
 Required mappings:
 
-- stable `claim_id`;
+- stable, delivery-unique `claim_id`;
 - `scope_id` for the society/session/field;
 - subject, predicate, and object;
 - observer and source provenance;
@@ -45,7 +45,7 @@ For the current Resonance World research substrate, the canonical mapping is:
 
 ```text
 LiveClaim.field_id     -> EvidenceClaim.scope_id
-LiveClaim.source_id    -> EvidenceClaim.claim_id
+transport identity     -> EvidenceClaim.claim_id
 LiveClaim.subject      -> EvidenceClaim.subject
 LiveClaim.predicate    -> EvidenceClaim.predicate
 LiveClaim.object       -> EvidenceClaim.object
@@ -57,7 +57,9 @@ LiveClaim.confidence   -> EvidenceClaim.confidence
 LiveClaim.direct       -> EvidenceClaim.direct
 ```
 
-`source_id` is claim-unique in the frozen W3 endogenous evidence substrate, so using it as `claim_id` preserves exact event-bundle identity while retaining original provenance.
+`source_id` is provenance identity, not necessarily delivery identity. The frozen W3 generator can repeat the same `source_id` when a participant is also selected as the scout for an event. The World adapter therefore uses the original `source_id` as the first `claim_id` and adds deterministic `#delivery:N` suffixes to later deliveries with the same source identity. Append order is preserved.
+
+Within one `(event, observer)` report, ContextGraph applies the frozen compatibility rule: after confidence filtering, the last admissible claim for each predicate wins. Across complete observer reports for one event, the highest-confidence report is canonical. Thus repeated delivery does not create an extra independent event.
 
 The adapter must not transfer any of the following into ContextGraph APIs:
 
