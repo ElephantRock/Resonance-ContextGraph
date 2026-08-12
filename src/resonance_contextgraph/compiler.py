@@ -42,9 +42,14 @@ class CompiledContext:
 
     @property
     def provenance_complete(self) -> bool:
-        return all(claim.claim_id and claim.source_id and claim.observed_by for claim in self.membership_claims) and all(
+        claims_complete = all(
+            claim.claim_id and claim.source_id and claim.observed_by
+            for claim in self.membership_claims
+        )
+        events_complete = all(
             event.claim_ids and event.reports for event in self.events
         )
+        return claims_complete and events_complete
 
     def best_pair(self, estimator: EstimatorSpec) -> Pair:
         """Return deterministic evidence-ranked lead/support pair.
