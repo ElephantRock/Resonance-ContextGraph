@@ -42,8 +42,12 @@ class CompiledContext:
 
     @property
     def provenance_complete(self) -> bool:
-        return all(claim.claim_id and claim.source_id and claim.observed_by for claim in self.membership_claims) and all(
-            event.claim_ids and event.reports for event in self.events
+        return (
+            all(
+                claim.claim_id and claim.source_id and claim.observed_by
+                for claim in self.membership_claims
+            )
+            and all(event.claim_ids and event.reports for event in self.events)
         )
 
     def best_pair(self, estimator: EstimatorSpec) -> Pair:
