@@ -55,9 +55,18 @@ jobs:
       - name: Create immutable version tag if absent
         env:
           TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-            echo "$TAG already exists; verifying release only."
+            git fetch --tags --force origin
+            TAG_COMMIT="$(git rev-list -n 1 "$TAG")"
+            HEAD_COMMIT="$(git rev-parse HEAD)"
+            if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+              echo "Version $VERSION is already tagged at $TAG_COMMIT; current commit is $HEAD_COMMIT."
+              echo "Bump the package version before attempting another stable release."
+              exit 1
+            fi
+            echo "$TAG already identifies this exact commit; verifying release only."
           else
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
